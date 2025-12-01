@@ -1,0 +1,10 @@
+{
+  "repo": "Wesley-Work/MTB-OA",
+  "target_dir": "/Users/wesley/Documents/GitHub/auto-update-from-github-repo/test",
+  "version_package_dir": "VersionPackage",
+  "filter_exclude": [".git", "logs/", "*.tmp"],
+  "asset": {
+    "name": "MTB-OA",
+    "type": ""
+  }
+}

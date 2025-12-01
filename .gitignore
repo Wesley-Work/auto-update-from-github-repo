@@ -1,0 +1,7 @@
+.token
+*.zip
+*.log
+*.cache
+.DS_Store
+
+dist/
