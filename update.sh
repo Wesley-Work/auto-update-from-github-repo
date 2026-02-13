@@ -120,6 +120,9 @@ rollback_to_version() {
     REPO=$(jq -r '.repo // empty' "$SINGLE_CONFIG")
     TARGET_DIR=$(jq -r '.target_dir // empty' "$SINGLE_CONFIG")
     VP_DIR_NAME=$(jq -r '.version_package_dir // "VersionPackage"' "$SINGLE_CONFIG")
+    set -f
+    local NOT_REMOVE_FILE=($(jq -r '.notRemoveFile[] // empty' "$SINGLE_CONFIG"))
+    set +f
     VP_DIR="$TARGET_DIR/$VP_DIR_NAME"
     BACKUP_ZIP="$VP_DIR/${target_ver}.zip"
 
@@ -132,6 +135,19 @@ rollback_to_version() {
         if [ -e "$item" ]; then
             base=$(basename "$item")
             if [ "$base" != "." ] && [ "$base" != ".." ] && [ "$base" != "$VP_DIR_NAME" ]; then
+                local skip_it=false
+                for pattern in "${NOT_REMOVE_FILE[@]}"; do
+                    local clean_p="${pattern%/}"
+                    if [[ "$base" == $clean_p ]]; then
+                        skip_it=true
+                        break
+                    fi
+                done
+
+                if [ "$skip_it" = "true" ]; then
+                    log "⏭️  Rollback: skipping removal of $base"
+                    continue
+                fi
                 rm -rf "$item"
             fi
         fi
@@ -153,7 +169,10 @@ perform_update_for_config() {
     local REPO=$(jq -r '.repo // empty' "$CONFIG_PATH")
     local TARGET_DIR=$(jq -r '.target_dir // empty' "$CONFIG_PATH")
     local VP_DIR_NAME=$(jq -r '.version_package_dir // "VersionPackage"' "$CONFIG_PATH")
+    set -f
     local FILTER_EXCLUDE=($(jq -r '.filter_exclude[] // empty' "$CONFIG_PATH"))
+    local NOT_REMOVE_FILE=($(jq -r '.notRemoveFile[] // empty' "$CONFIG_PATH"))
+    set +f
     local ASSET_NAME_PREFIX=$(jq -r '.asset.name // empty' "$CONFIG_PATH")
     local ASSET_TYPE=$(jq -r '.asset.type // empty' "$CONFIG_PATH")
 
@@ -237,6 +256,19 @@ perform_update_for_config() {
         if [ -e "$item" ]; then
             local base=$(basename "$item")
             if [ "$base" != "." ] && [ "$base" != ".." ] && [ "$base" != "$VP_DIR_NAME" ]; then
+                local skip_it=false
+                for pattern in "${NOT_REMOVE_FILE[@]}"; do
+                    local clean_p="${pattern%/}"
+                    if [[ "$base" == $clean_p ]]; then
+                        skip_it=true
+                        break
+                    fi
+                done
+
+                if [ "$skip_it" = "true" ]; then
+                    log "⏭️  Skipping removal of: $base"
+                    continue
+                fi
                 rm -rf "$item"
             fi
         fi
